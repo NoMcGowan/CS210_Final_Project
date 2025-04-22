@@ -55,3 +55,30 @@ public:
             cout << k.city << ", " << k.country << " -> " << pop << endl;
     }
 };
+
+string toLower(const string& s) {
+    string res = s;
+    transform(res.begin(), res.end(), res.begin(), ::tolower);
+    return res;
+}
+
+bool lookupCity(const string& filename, const CityKey& key, string& population) {
+    ifstream file(filename);
+    if (!file.is_open()) return false;
+
+    string line;
+    getline(file, line); // skip header
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string country, city, pop;
+        getline(ss, country, ',');
+        getline(ss, city, ',');
+        getline(ss, pop);
+
+        if (toLower(city) == key.city && toLower(country) == key.country) {
+            population = pop;
+            return true;
+        }
+    }
+    return false;
+}
