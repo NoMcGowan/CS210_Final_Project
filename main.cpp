@@ -20,3 +20,38 @@ struct CityKeyHasher {
     }
 };
 
+class LRUCache {
+    size_t maxSize;
+    list<pair<CityKey, string>> entries;
+    unordered_map<CityKey, list<pair<CityKey, string>>::iterator, CityKeyHasher> cache;
+
+public:
+    LRUCache(size_t size) : maxSize(size) {}
+
+    bool get(const CityKey& key, string& population) {
+        auto it = cache.find(key);
+        if (it == cache.end()) return false;
+
+        entries.splice(entries.begin(), entries, it->second);
+        population = it->second->second;
+        return true;
+    }
+
+    void put(const CityKey& key, const string& population) {
+        if (cache.find(key) != cache.end()) {
+            entries.erase(cache[key]);
+            cache.erase(key);
+        } else if (entries.size() == maxSize) {
+            cache.erase(entries.back().first);
+            entries.pop_back();
+        }
+        entries.push_front({key, population});
+        cache[key] = entries.begin();
+    }
+
+    void printCache() const {
+        cout << "\n[Cache] Most Recent -> Oldest:\n";
+        for (const auto& [k, pop] : entries)
+            cout << k.city << ", " << k.country << " -> " << pop << endl;
+    }
+};
