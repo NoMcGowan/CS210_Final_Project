@@ -67,7 +67,7 @@ bool lookupCity(const string& filename, const CityKey& key, string& population) 
     if (!file.is_open()) return false;
 
     string line;
-    getline(file, line); // skip header
+    getline(file, line);
     while (getline(file, line)) {
         stringstream ss(line);
         string country, city, pop;
@@ -81,4 +81,35 @@ bool lookupCity(const string& filename, const CityKey& key, string& population) 
         }
     }
     return false;
+}
+
+int main() {
+    LRUCache cache(10);
+    string filename = "world_cities.csv";
+
+    while (true) {
+        string city, country;
+        cout << "\nEnter city name (or 'exit'): ";
+        getline(cin, city);
+        if (toLower(city) == "exit") break;
+
+        cout << "Enter country code: ";
+        getline(cin, country);
+
+        CityKey key{toLower(city), toLower(country)};
+        string population;
+
+        if (cache.get(key, population)) {
+            cout << "[From Cache] Population: " << population << endl;
+        } else if (lookupCity(filename, key, population)) {
+            cache.put(key, population);
+            cout << "[From File] Population: " << population << endl;
+        } else {
+            cout << "City not found.\n";
+        }
+
+        cache.printCache(); 
+    }
+
+    return 0;
 }
