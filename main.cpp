@@ -108,7 +108,7 @@ int main() {
             cout << "City not found.\n";
         }
 
-        cache.printCache(); 
+        cache.printCache(); //Finalized
     }
 
     return 0;
