@@ -3,7 +3,11 @@
 #include <sstream>
 #include <unordered_map>
 #include <list>
+#include <vector>
 #include <algorithm>
+#include <memory>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -20,6 +24,14 @@ struct CityKeyHasher {
     }
 };
 
+class ICache {
+    public:
+        virtual bool get(const CityKey& key, string& population) = 0;
+        virtual void put(const CityKey& key, const string& population) = 0;
+        virtual void printCache() const = 0;
+        virtual ~ICache() = default;
+    };
+    
 class LRUCache {
     size_t maxSize;
     list<pair<CityKey, string>> entries;
