@@ -180,3 +180,45 @@ bool lookupCity(const string& filename, const CityKey& key, string& population) 
     return false;
 }
 
+int main() {
+    unique_ptr<ICache> cache;
+    string filename = "world_cities.csv";
+
+    cout << "Select caching strategy:\n1. LFU\n2. FIFO\n3. Random\nChoice: ";
+    int choice;
+    cin >> choice;
+    cin.ignore(); // ignore newline
+
+    switch (choice) {
+        case 1: cache = make_unique<LFUCache>(10); break;
+        case 2: cache = make_unique<FIFOCache>(10); break;
+        case 3: cache = make_unique<RandomCache>(10); break;
+        default: cout << "Invalid choice.\n"; return 1;
+    }
+
+    while (true) {
+        string city, country;
+        cout << "\nEnter city name (or 'exit'): ";
+        getline(cin, city);
+        if (toLower(city) == "exit") break;
+
+        cout << "Enter country code: ";
+        getline(cin, country);
+
+        CityKey key{toLower(city), toLower(country)};
+        string population;
+
+        if (cache->get(key, population)) {
+            cout << "[From Cache] Population: " << population << endl;
+        } else if (lookupCity(filename, key, population)) {
+            cache->put(key, population);
+            cout << "[From File] Population: " << population << endl;
+        } else {
+            cout << "City not found.\n";
+        }
+
+        cache->printCache();
+    }
+
+    return 0;
+}
