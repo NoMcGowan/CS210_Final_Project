@@ -68,6 +68,54 @@ public:
     }
 };
 
+class LFUCache : public ICache {
+    size_t maxSize;
+    unordered_map<CityKey, pair<string, int>, CityKeyHasher> values;
+    list<CityKey> order;
+
+public:
+    LFUCache(size_t size) : maxSize(size) {}
+
+    bool get(const CityKey& key, string& population) override {
+        auto it = values.find(key);
+        if (it == values.end()) return false;
+        it->second.second++;
+        population = it->second.first;
+        return true;
+    }
+
+    void put(const CityKey& key, const string& population) override {
+        if (values.find(key) != values.end()) {
+            values[key].first = population;
+            values[key].second++;
+            return;
+        }
+
+        if (values.size() == maxSize) {
+            CityKey evictKey = order.front();
+            int minFreq = values[evictKey].second;
+            for (const auto& k : order) {
+                if (values[k].second < minFreq) {
+                    evictKey = k;
+                    minFreq = values[k].second;
+                }
+            }
+            values.erase(evictKey);
+            order.remove(evictKey);
+        }
+
+        values[key] = {population, 1};
+        order.push_back(key);
+    }
+
+    void printCache() const override {
+        cout << "\n[LFU Cache] Key -> Population (Freq):\n";
+        for (const auto& [k, v] : values)
+            cout << k.city << ", " << k.country << " -> " << v.first << " (" << v.second << ")" << endl;
+    }
+};
+
+
 string toLower(const string& s) {
     string res = s;
     transform(res.begin(), res.end(), res.begin(), ::tolower);
