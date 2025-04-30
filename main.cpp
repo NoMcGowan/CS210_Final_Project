@@ -115,6 +115,43 @@ public:
     }
 };
 
+class RandomCache : public ICache {
+    size_t maxSize;
+    unordered_map<CityKey, string, CityKeyHasher> values;
+    vector<CityKey> keys;
+
+public:
+    RandomCache(size_t size) : maxSize(size) { srand(static_cast<unsigned>(time(nullptr))); }
+
+    bool get(const CityKey& key, string& population) override {
+        auto it = values.find(key);
+        if (it == values.end()) return false;
+        population = it->second;
+        return true;
+    }
+
+    void put(const CityKey& key, const string& population) override {
+        if (values.find(key) != values.end()) {
+            values[key] = population;
+            return;
+        }
+
+        if (values.size() == maxSize) {
+            int idx = rand() % keys.size();
+            values.erase(keys[idx]);
+            keys.erase(keys.begin() + idx);
+        }
+
+        values[key] = population;
+        keys.push_back(key);
+    }
+
+    void printCache() const override {
+        cout << "\n[Random Cache] Key -> Population:\n";
+        for (const auto& key : keys)
+            cout << key.city << ", " << key.country << " -> " << values.at(key) << endl;
+    }
+};
 
 string toLower(const string& s) {
     string res = s;
