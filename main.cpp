@@ -32,24 +32,24 @@ class ICache {
         virtual ~ICache() = default;
     };
     
-class LRUCache {
+// FIFO Cache (was LRU)
+class FIFOCache : public ICache {
     size_t maxSize;
     list<pair<CityKey, string>> entries;
     unordered_map<CityKey, list<pair<CityKey, string>>::iterator, CityKeyHasher> cache;
 
 public:
-    LRUCache(size_t size) : maxSize(size) {}
+    FIFOCache(size_t size) : maxSize(size) {}
 
-    bool get(const CityKey& key, string& population) {
+    bool get(const CityKey& key, string& population) override {
         auto it = cache.find(key);
         if (it == cache.end()) return false;
 
-        entries.splice(entries.begin(), entries, it->second);
         population = it->second->second;
         return true;
     }
 
-    void put(const CityKey& key, const string& population) {
+    void put(const CityKey& key, const string& population) override {
         if (cache.find(key) != cache.end()) {
             entries.erase(cache[key]);
             cache.erase(key);
@@ -61,8 +61,8 @@ public:
         cache[key] = entries.begin();
     }
 
-    void printCache() const {
-        cout << "\n[Cache] Most Recent -> Oldest:\n";
+    void printCache() const override {
+        cout << "\n[FIFO Cache] Most Recent -> Oldest:\n";
         for (const auto& [k, pop] : entries)
             cout << k.city << ", " << k.country << " -> " << pop << endl;
     }
@@ -95,33 +95,3 @@ bool lookupCity(const string& filename, const CityKey& key, string& population) 
     return false;
 }
 
-int main() {
-    LRUCache cache(10);
-    string filename = "world_cities.csv";
-
-    while (true) {
-        string city, country;
-        cout << "\nEnter city name (or 'exit'): ";
-        getline(cin, city);
-        if (toLower(city) == "exit") break;
-
-        cout << "Enter country code: ";
-        getline(cin, country);
-
-        CityKey key{toLower(city), toLower(country)};
-        string population;
-
-        if (cache.get(key, population)) {
-            cout << "[From Cache] Population: " << population << endl;
-        } else if (lookupCity(filename, key, population)) {
-            cache.put(key, population);
-            cout << "[From File] Population: " << population << endl;
-        } else {
-            cout << "City not found.\n";
-        }
-
-        cache.printCache(); //Finalized
-    }
-
-    return 0;
-}
