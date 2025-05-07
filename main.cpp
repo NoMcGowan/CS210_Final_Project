@@ -24,6 +24,54 @@ struct CityKeyHasher {
     }
 };
 
+class TrieNode {
+    public:
+        unordered_map<char, TrieNode*> children;
+        unordered_map<string, string> countryToPopulation;
+        bool isEnd = false;
+    
+        ~TrieNode() {
+            for (auto& pair : children)
+                delete pair.second;
+        }
+    };
+    class Trie {
+        TrieNode* root;
+
+    public:
+        Trie() {
+            root = new TrieNode();
+        }
+        ~Trie() {
+            delete root;
+        }
+        void insert(const string& city, const string& country, const string& population) {
+            TrieNode* node = root;
+            for (char c : city) {
+                c = tolower(c);
+                if (!node->children.count(c))
+                    node->children[c] = new TrieNode();
+                node = node->children[c];
+            }
+            node->isEnd = true;
+            node->countryToPopulation[country] = population;
+        }
+        bool search(const string& city, const string& country, string& population) {
+            TrieNode* node = root;
+            for (char c : city) {
+                c = tolower(c);
+                if (!node->children.count(c))
+                    return false;
+                node = node->children[c];
+            }
+            if (node->isEnd && node->countryToPopulation.count(country)) {
+                population = node->countryToPopulation[country];
+                return true;
+            }
+            return false;
+        }
+    };
+    
 class ICache {
     public:
         virtual bool get(const CityKey& key, string& population) = 0;
