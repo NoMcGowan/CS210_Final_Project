@@ -24,54 +24,7 @@ struct CityKeyHasher {
     }
 };
 
-class TrieNode {
-    public:
-        unordered_map<char, TrieNode*> children;
-        unordered_map<string, string> countryToPopulation;
-        bool isEnd = false;
-    
-        ~TrieNode() {
-            for (auto& pair : children)
-                delete pair.second;
-        }
-    };
-    class Trie {
-        TrieNode* root;
 
-    public:
-        Trie() {
-            root = new TrieNode();
-        }
-        ~Trie() {
-            delete root;
-        }
-        void insert(const string& city, const string& country, const string& population) {
-            TrieNode* node = root;
-            for (char c : city) {
-                c = tolower(c);
-                if (!node->children.count(c))
-                    node->children[c] = new TrieNode();
-                node = node->children[c];
-            }
-            node->isEnd = true;
-            node->countryToPopulation[country] = population;
-        }
-        bool search(const string& city, const string& country, string& population) {
-            TrieNode* node = root;
-            for (char c : city) {
-                c = tolower(c);
-                if (!node->children.count(c))
-                    return false;
-                node = node->children[c];
-            }
-            if (node->isEnd && node->countryToPopulation.count(country)) {
-                population = node->countryToPopulation[country];
-                return true;
-            }
-            return false;
-        }
-    };
-    
 class ICache {
     public:
         virtual bool get(const CityKey& key, string& population) = 0;
@@ -200,33 +153,80 @@ public:
             cout << key.city << ", " << key.country << " -> " << values.at(key) << endl;
     }
 };
+class TrieNode {
+    public:
+        unordered_map<char, TrieNode*> children;
+        unordered_map<string, string> countryToPopulation;
+        bool isEnd = false;
+    
+        ~TrieNode() {
+            for (auto& pair : children)
+                delete pair.second;
+        }
+    };
+    class Trie {
+        TrieNode* root;
 
+    public:
+        Trie() {
+            root = new TrieNode();
+        }
+        ~Trie() {
+            delete root;
+        }
+        void insert(const string& city, const string& country, const string& population) {
+            TrieNode* node = root;
+            for (char c : city) {
+                c = tolower(c);
+                if (!node->children.count(c))
+                    node->children[c] = new TrieNode();
+                node = node->children[c];
+            }
+            node->isEnd = true;
+            node->countryToPopulation[country] = population;
+        }
+        bool search(const string& city, const string& country, string& population) {
+            TrieNode* node = root;
+            for (char c : city) {
+                c = tolower(c);
+                if (!node->children.count(c))
+                    return false;
+                node = node->children[c];
+            }
+            if (node->isEnd && node->countryToPopulation.count(country)) {
+                population = node->countryToPopulation[country];
+                return true;
+            }
+            return false;
+        }
+    };
+    
 string toLower(const string& s) {
     string res = s;
     transform(res.begin(), res.end(), res.begin(), ::tolower);
     return res;
 }
-
-bool lookupCity(const string& filename, const CityKey& key, string& population) {
+void loadCSVIntoTrie(const string& filename, Trie& trie) {
     ifstream file(filename);
-    if (!file.is_open()) return false;
+    if (!file.is_open()) {
+        cerr << "Failed to open file.\n";
+        return;
+    }
 
     string line;
-    getline(file, line);
+    getline(file, line); // header
     while (getline(file, line)) {
         stringstream ss(line);
-        string country, city, pop;
+        string country, city, population;
         getline(ss, country, ',');
         getline(ss, city, ',');
-        getline(ss, pop);
-
-        if (toLower(city) == key.city && toLower(country) == key.country) {
-            population = pop;
-            return true;
-        }
+        getline(ss, population);
+        trie.insert(toLower(city), toLower(country), population);
     }
-    return false;
+
+    cout << "[Loaded Trie from file]\n";
 }
+
 
 int main() {
     unique_ptr<ICache> cache;
