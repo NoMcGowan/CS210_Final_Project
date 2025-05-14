@@ -20,7 +20,7 @@ vector<Query> loadAllCities(const string& filename) {
     vector<Query> all;
     string line;
 
-    getline(file, line); // Skip header
+    getline(file, line); 
     while (getline(file, line)) {
         stringstream ss(line);
         string country, city, population;

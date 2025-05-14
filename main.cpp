@@ -206,6 +206,7 @@ void loadCSVIntoTrie(const string& filename, Trie& trie) {
     cout << "[Loaded Trie from file]\n";
 }
 
+#ifndef UNIT_TEST
 int main() {
     string filename = "world_cities.csv";
     Trie trie;
@@ -251,3 +252,4 @@ int main() {
     delete cache;
     return 0;
 }
+#endif
